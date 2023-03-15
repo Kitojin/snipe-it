@@ -46,8 +46,12 @@
                                 {{ Form::label('auto_increment_assets', trans('admin/settings/general.auto_increment_assets')) }}
                             </div>
                             <div class="col-md-7">
-                                {{ Form::checkbox('auto_increment_assets', '1', old('auto_increment_assets', $setting->auto_increment_assets),array('class' => 'minimal', 'aria-label'=>'auto_increment_assets')) }}
-                                {{ trans('admin/settings/general.enabled') }}
+								{{ Form::radio('auto_increment_assets', '0', old('auto_increment_assets', $setting->auto_increment_assets==0),array('class' => 'minimal', 'aria-label'=>'auto_increment_assets')) }}
+								{{ trans('admin/settings/general.asset_tag_manual') }}
+								{{ Form::radio('auto_increment_assets', '1', old('auto_increment_assets', $setting->auto_increment_assets==1),array('class' => 'minimal', 'aria-label'=>'auto_increment_assets')) }}
+								{{ trans('admin/settings/general.asset_tag_incremental') }}
+								{{ Form::radio('auto_increment_assets', '2', old('auto_increment_assets', $setting->auto_increment_assets==2),array('class' => 'minimal', 'aria-label'=>'auto_increment_assets')) }}
+                                {{ trans('admin/settings/general.asset_tag_random') }}
                             </div>
                         </div>
 
@@ -68,7 +72,7 @@
                                 {{ Form::label('auto_increment_prefix', trans('admin/settings/general.auto_increment_prefix')) }}
                             </div>
                             <div class="col-md-7">
-                                @if ($setting->auto_increment_assets == 1)
+                              	@if ($setting->auto_increment_assets != 0)
                                     {{ Form::text('auto_increment_prefix', old('auto_increment_prefix', $setting->auto_increment_prefix), array('class' => 'form-control', 'style'=>'width: 150px;', 'aria-label'=>'auto_increment_prefix')) }}
                                     {!! $errors->first('auto_increment_prefix', '<span class="alert-msg" aria-hidden="true">:message</span>') !!}
                                 @else

@@ -47,5 +47,6 @@ return [
     'asset_deployable' => 'Dieses Asset ist verfügbar und kann herausgegeben werden.',
     'processing_spinner' => 'Wird verarbeitet...',
     'optional_infos'  => 'Optionale Informationen',
-    'order_details'   => 'Bestellinformationen'
+    'order_details'   => 'Bestellinformationen',
+	'asset_tag_auto_help' => 'Wird beim Erstellen automatisch generiert.'
 ];

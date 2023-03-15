@@ -781,6 +781,8 @@ class Asset extends Depreciable
             }
 
             return $settings->auto_increment_prefix.$settings->next_auto_tag_base;
+		} else if ($settings->auto_increment_assets == '2') {
+			return '--';
         } else {
             return false;
         }

@@ -11,6 +11,7 @@ return [
     'create' => [
         'error'   		=> 'Asset wurde nicht erstellt. Bitte versuchen Sie es erneut. :(',
         'success' 		=> 'Asset wurde erfolgreich erstellt. :)',
+		'error-collission' => 'Kein freier Asset Tag gefunden.',
     ],
 
     'update' => [

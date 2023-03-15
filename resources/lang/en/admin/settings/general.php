@@ -24,7 +24,7 @@ return [
     'audit_interval_help'       => 'If you are required to regularly physically audit your assets, enter the interval in months that you use. If you update this value, all of the "next audit dates" for assets with an upcoming audit date will be updated.',
     'audit_warning_days'        => 'Audit Warning Threshold',
     'audit_warning_days_help'   => 'How many days in advance should we warn you when assets are due for auditing?',
-    'auto_increment_assets'		=> 'Generate auto-incrementing asset tags',
+    'auto_increment_assets'		=> 'Generate asset tags automatically',
     'auto_increment_prefix'		=> 'Prefix (optional)',
     'auto_incrementing_help'    => 'Enable auto-incrementing asset tags first to set this',
     'backups'					=> 'Backups',
@@ -323,4 +323,7 @@ return [
     'setup_migration_create_user' => 'Next: Create User',
     'ldap_settings_link' => 'LDAP Settings Page',
     'slack_test' => 'Test <i class="fab fa-slack"></i> Integration',
+	'asset_tag_manual' => 'Disabled',
+	'asset_tag_incremental' => 'Incremental',
+	'asset_tag_random' => 'Random',
 ];

@@ -47,5 +47,6 @@ return [
     'asset_deployable' => 'That status is deployable. This asset can be checked out.',
     'processing_spinner' => 'Processing...',
     'optional_infos'  => 'Optional Information',
-    'order_details'   => 'Order Related Information'
+    'order_details'   => 'Order Related Information',
+	'asset_tag_auto_help' => 'Gets created automatically.'
 ];

@@ -24,7 +24,7 @@ return [
     'audit_interval_help'       => 'If you are required to regularly physically audit your assets, enter the interval in months that you use. If you update this value, all of the "next audit dates" for assets with an upcoming audit date will be updated.',
     'audit_warning_days'        => 'Audit-Warnschwelle',
     'audit_warning_days_help'   => 'Wie viele Tage im Voraus sollen wir Dich warnen, wenn Assets zur Prüfung fällig werden?',
-    'auto_increment_assets'		=> 'Erzeugen von fortlaufenden Asset Tags',
+    'auto_increment_assets'		=> 'Automatisches Erzeugen von Asset Tags',
     'auto_increment_prefix'		=> 'Präfix (optional)',
     'auto_incrementing_help'    => 'Aktiviere zuerst fortlaufende Asset Tags um dies zu setzen',
     'backups'					=> 'Backups',
@@ -322,4 +322,7 @@ return [
     'setup_migration_create_user' => 'Weiter: Benutzer erstellen',
     'ldap_settings_link' => 'LDAP Einstellungsseite',
     'slack_test' => '<i class="fab fa-slack"></i> Integration testen',
+	'asset_tag_manual' => 'Deaktiviert',
+	'asset_tag_incremental' => 'Fortlaufend',
+	'asset_tag_random' => 'Zufällig',
 ];

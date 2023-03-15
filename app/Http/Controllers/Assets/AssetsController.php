@@ -109,9 +109,36 @@ class AssetsController extends Controller
         // Handle asset tags - there could be one, or potentially many.
         // This is only necessary on create, not update, since bulk editing is handled
         // differently
-        $asset_tags = $request->input('asset_tags');
-
         $settings = Setting::getSettings();
+		$asset_tags = $request->input('asset_tags');
+
+		//Generate asset tags in the backend if random tags are enabled
+		if($settings->auto_increment_assets == '2'){
+			//IDEA: add charset and attempts to settings to make them adjustable?
+			$attempts = 1000;
+			$charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789';
+			$categoryPrefix = DB::table('categories')->join('models','models.category_id','=','categories.id')->join('assets','assets.model_id','=','models.id')->select('category_prefix')->where('assets.model_id','=',$request->input('model_id'))->first()->category_prefix;
+			//when generating random tags there is no array of asset tags, so use serial numbers instead to check how many devices are to be added.
+			$assetTagAmount = count($request->input('serials'));
+			
+			$randomTags = array();
+			for ($i = 0; $i < $attempts; $i++) {
+				$currentTag = '';
+				//Zerofill count is a bit of a misnomer here. It's the setting to describe how long a generated tag should be. 
+				for ($j = 0; $j < $settings->zerofill_count; $j++) {
+					$currentTag .= $charset[random_int(0, strlen($charset) - 1)];
+				}
+				$randomTags[] = $settings->auto_increment_prefix.$categoryPrefix.$currentTag;
+			}
+
+			//find generated tags that are already in DB 
+			$invalidTags = DB::table('assets')->whereIn('asset_tag', $randomTags)->pluck('asset_tag')->toArray();
+			$validTags = array_diff($randomTags, $invalidTags);
+			//if we don't have enough valid tags, return empty array to cause a graceful error. 
+			//otherwise, return subset of valid tags equal to amount of assets to be added
+			//adding 1 to $assetTagAmount because for whatever reason the for loop below starts at 1 instead of 0...
+			$asset_tags = (count($validTags) > $assetTagAmount) ? array_slice($validTags,0,$assetTagAmount+1) : array();
+		}
 
         $success = false;
         $serials = $request->input('serials');
@@ -217,8 +244,11 @@ class AssetsController extends Controller
                
       
         }
-
-        return redirect()->back()->withInput()->withErrors($asset->getErrors());
+		if(isset($asset)){
+			return redirect()->back()->withInput()->withErrors($asset->getErrors());
+		} else {
+			return redirect()->back()->withInput()->with('error', trans('admin/hardware/message.create.error-collission'));
+		}
     }
 
     public function getOptionCookie(Request $request){

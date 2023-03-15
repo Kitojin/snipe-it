@@ -29,15 +29,20 @@
       @else
           <!-- we are creating a new asset - let people use more than one asset tag -->
           <div class="col-md-7 col-sm-12{{  (Helper::checkIfRequired($item, 'asset_tag')) ? ' required' : '' }}">
-              <input class="form-control" type="text" name="asset_tags[1]" id="asset_tag" value="{{ Request::old('asset_tag', \App\Models\Asset::autoincrement_asset()) }}" data-validation="required">
+              <input class="form-control" type="text" name="asset_tags[1]" id="asset_tag" value="{{ Request::old('asset_tag', \App\Models\Asset::autoincrement_asset()) }}" data-validation="required" {{ ($snipeSettings->auto_increment_assets == '2') ? 'readonly' : ''}}>
+			  @if ($snipeSettings->auto_increment_assets == '2')
+			  	<p class="help-block">{{ trans('admin/hardware/form.asset_tag_auto_help') }}</p>
+			  @endif
               {!! $errors->first('asset_tags', '<span class="alert-msg"><i class="fas fa-times"></i> :message</span>') !!}
               {!! $errors->first('asset_tag', '<span class="alert-msg"><i class="fas fa-times"></i> :message</span>') !!}
           </div>
+		  @if ($snipeSettings->auto_increment_assets != '2')
           <div class="col-md-2 col-sm-12">
               <button class="add_field_button btn btn-default btn-sm">
                   <i class="fas fa-plus"></i>
               </button>
           </div>
+		  @endif
       @endif
   </div>
     
@@ -291,35 +296,48 @@
 
             e.preventDefault();
 
-            var auto_tag        = $("#asset_tag").val().replace(/[^\d]/g, '');
+            var auto_tag        = '';
             var box_html        = '';
 			const zeroPad 		= (num, places) => String(num).padStart(places, '0');
 
             // Check that we haven't exceeded the max number of asset fields
             if (x < max_fields) {
 
-                if (auto_tag!='') {
-                     auto_tag = zeroPad(parseInt(auto_tag) + parseInt(x),auto_tag.length);
-                } else {
-                     auto_tag = '';
-                }
+				switch({{$snipeSettings->auto_increment_assets}}){
+					case 1:
+						auto_tag = $("#asset_tag").val().replace(/[^\d]/g, '');
+						auto_tag = auto_tag!='' ? zeroPad(parseInt(auto_tag) + parseInt(x),auto_tag.length) : '';
+						break;
+					case 2:
+						auto_tag = '--';
+						break;
+					default:
+						auto_tag = '';
+						break;
+				}
 
                 x++; //text box increment
 
                 box_html += '<span class="fields_wrapper">';
-                box_html += '<div class="form-group"><label for="asset_tag" class="col-md-3 control-label">{{ trans('admin/hardware/form.tag') }} ' + x + '</label>';
-                box_html += '<div class="col-md-7 col-sm-12 required">';
-                box_html += '<input type="text"  class="form-control" name="asset_tags[' + x + ']" value="{{ (($snipeSettings->auto_increment_prefix!='') && ($snipeSettings->auto_increment_assets=='1')) ? $snipeSettings->auto_increment_prefix : '' }}'+ auto_tag +'" data-validation="required">';
-                box_html += '</div>';
-                box_html += '<div class="col-md-2 col-sm-12">';
-                box_html += '<a href="#" class="remove_field btn btn-default btn-sm"><i class="fas fa-minus"></i></a>';
-                box_html += '</div>';
-                box_html += '</div>';
-                box_html += '</div>';
+				if({{$snipeSettings->auto_increment_assets}}!=2){
+					box_html += '<div class="form-group"><label for="asset_tag" class="col-md-3 control-label">{{ trans('admin/hardware/form.tag') }} ' + x + '</label>';
+					box_html += '<div class="col-md-7 col-sm-12 required">';
+					box_html += '<input type="text"  class="form-control" name="asset_tags[' + x + ']" value="{{ (($snipeSettings->auto_increment_prefix!='') && ($snipeSettings->auto_increment_assets=='1')) ? $snipeSettings->auto_increment_prefix : '' }}'+ auto_tag +'" data-validation="required">';
+					box_html += '</div>';
+					box_html += '<div class="col-md-2 col-sm-12">';
+					box_html += '<a href="#" class="remove_field btn btn-default btn-sm"><i class="fas fa-minus"></i></a>';
+					box_html += '</div>';
+					box_html += '</div>';
+				}
                 box_html += '<div class="form-group"><label for="serial" class="col-md-3 control-label">{{ trans('admin/hardware/form.serial') }} ' + x + '</label>';
                 box_html += '<div class="col-md-7 col-sm-12">';
                 box_html += '<input type="text"  class="form-control" name="serials[' + x + ']">';
                 box_html += '</div>';
+				if({{$snipeSettings->auto_increment_assets}}==2){
+					box_html += '<div class="col-md-2 col-sm-12">';
+					box_html += '<a href="#" class="remove_field btn btn-default btn-sm"><i class="fas fa-minus"></i></a>';
+					box_html += '</div>';
+				}
                 box_html += '</div>';
                 box_html += '</span>';
                 $(wrapper).append(box_html);

@@ -74,6 +74,7 @@ class CategoriesController extends Controller
         $category->use_default_eula = $request->input('use_default_eula', '0');
         $category->require_acceptance = $request->input('require_acceptance', '0');
         $category->checkin_email = $request->input('checkin_email', '0');
+		$category->category_prefix = $request->input('category_prefix', '');
         $category->user_id = Auth::id();
 
         $category = $request->handleImages($category);
@@ -133,6 +134,7 @@ class CategoriesController extends Controller
         $category->use_default_eula = $request->input('use_default_eula', '0');
         $category->require_acceptance = $request->input('require_acceptance', '0');
         $category->checkin_email = $request->input('checkin_email', '0');
+		$category->category_prefix = $request->input('category_prefix','');
 
         $category = $request->handleImages($category);
 
