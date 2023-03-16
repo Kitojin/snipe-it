@@ -117,7 +117,7 @@ class AssetsController extends Controller
 			//IDEA: add charset and attempts to settings to make them adjustable?
 			$attempts = 1000;
 			$charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789';
-			$categoryPrefix = DB::table('categories')->join('models','models.category_id','=','categories.id')->join('assets','assets.model_id','=','models.id')->select('category_prefix')->where('assets.model_id','=',$request->input('model_id'))->first()->category_prefix;
+			$categoryPrefix = DB::table('categories')->join('models','models.category_id','=','categories.id')->select('category_prefix')->where('models.id','=',$request->input('model_id'))->first()->category_prefix;
 			//when generating random tags there is no array of asset tags, so use serial numbers instead to check how many devices are to be added.
 			$assetTagAmount = count($request->input('serials'));
 			
