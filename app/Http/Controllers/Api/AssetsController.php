@@ -639,76 +639,111 @@ class AssetsController extends Controller
      * @since [v4.0]
      * @return JsonResponse
      */
-    public function update(ImageUploadRequest $request, $id)
-    {
+    public function update(ImageUploadRequest $request, $ids = null) {
         $this->authorize('update', Asset::class);
 
-        if ($asset = Asset::find($id)) {
-            $asset->fill($request->all());
+		//we might either get an array passed in the request body for bulk checkouts or a single id from the query param
 
-            ($request->filled('model_id')) ?
-                $asset->model()->associate(AssetModel::find($request->get('model_id'))) : null;
-            ($request->filled('rtd_location_id')) ?
-                $asset->location_id = $request->get('rtd_location_id') : '';
-            ($request->filled('company_id')) ?
-                $asset->company_id = Company::getIdForCurrentUser($request->get('company_id')) : '';
+		//if we're doing a bulk action and aren't given any ids to work with, bail out.
+		if(!isset($ids) && !$request->has('asset_ids')){
+			return response()->json(Helper::formatStandardApiResponse('error', null, 'bulk editing requires asset_ids in the body, none provided!'));
+		}
 
-            ($request->filled('rtd_location_id')) ?
-                $asset->location_id = $request->get('rtd_location_id') : null;
+		//if $ids isn't set, we're doing a bulk action, so grab request data from body
+		if(!isset($ids)){
+			$ids = $request->input('asset_ids');
+		}
 
-            /**
-            * this is here just legacy reasons. Api\AssetController
-            * used image_source  once to allow encoded image uploads.
-            */
-            if ($request->has('image_source')) {
-                $request->offsetSet('image', $request->offsetGet('image_source'));
-            }     
+		//if we were passed a single value (e.g. from named endpoint), wrap it in an array
+		if(!is_array($ids)){
+			$ids = array($ids);
+		}
 
-            $asset = $request->handleImages($asset); 
-            
-            // Update custom fields
-            if (($model = AssetModel::find($asset->model_id)) && (isset($model->fieldset))) {
-                foreach ($model->fieldset->fields as $field) {
-                    if ($request->has($field->db_column)) {
-                        if ($field->field_encrypted == '1') {
-                            if (Gate::allows('admin')) {
-                                $asset->{$field->db_column} = \Crypt::encrypt($request->input($field->db_column));
-                            }
-                        } else {
-                            $asset->{$field->db_column} = $request->input($field->db_column);
-                        }
-                    }
-                }
-            }
+		//data should now be sufficiently normalised to handle bulk and single asset updates
+		$updateResults = array();
+		foreach ($ids as $id) {
+
+			if ($asset = Asset::find($id)) {
+				$asset->fill($request->all());
+
+				($request->filled('model_id')) ?
+					$asset->model()->associate(AssetModel::find($request->get('model_id'))) : null;
+				($request->filled('rtd_location_id')) ?
+					$asset->location_id = $request->get('rtd_location_id') : '';
+				($request->filled('company_id')) ?
+					$asset->company_id = Company::getIdForCurrentUser($request->get('company_id')) : '';
+
+				($request->filled('rtd_location_id')) ?
+					$asset->location_id = $request->get('rtd_location_id') : null;
+
+				/**
+				* this is here just legacy reasons. Api\AssetController
+				* used image_source  once to allow encoded image uploads.
+				*/
+				if ($request->has('image_source')) {
+					$request->offsetSet('image', $request->offsetGet('image_source'));
+				}     
+
+				$asset = $request->handleImages($asset); 
+				
+				// Update custom fields
+				if (($model = AssetModel::find($asset->model_id)) && (isset($model->fieldset))) {
+					foreach ($model->fieldset->fields as $field) {
+						if ($request->has($field->db_column)) {
+							if ($field->field_encrypted == '1') {
+								if (Gate::allows('admin')) {
+									$asset->{$field->db_column} = \Crypt::encrypt($request->input($field->db_column));
+								}
+							} else {
+								$asset->{$field->db_column} = $request->input($field->db_column);
+							}
+						}
+					}
+				}
 
 
-            if ($asset->save()) {
-                if (($request->filled('assigned_user')) && ($target = User::find($request->get('assigned_user')))) {
-                        $location = $target->location_id;
-                } elseif (($request->filled('assigned_asset')) && ($target = Asset::find($request->get('assigned_asset')))) {
-                    $location = $target->location_id;
+				if ($asset->save()) {
+					if (($request->filled('assigned_user')) && ($target = User::find($request->get('assigned_user')))) {
+							$location = $target->location_id;
+					} elseif (($request->filled('assigned_asset')) && ($target = Asset::find($request->get('assigned_asset')))) {
+						$location = $target->location_id;
 
-                    Asset::where('assigned_type', \App\Models\Asset::class)->where('assigned_to', $id)
-                        ->update(['location_id' => $target->location_id]);
-                } elseif (($request->filled('assigned_location')) && ($target = Location::find($request->get('assigned_location')))) {
-                    $location = $target->id;
-                }
+						Asset::where('assigned_type', \App\Models\Asset::class)->where('assigned_to', $id)
+							->update(['location_id' => $target->location_id]);
+					} elseif (($request->filled('assigned_location')) && ($target = Location::find($request->get('assigned_location')))) {
+						$location = $target->id;
+					}
 
-                if (isset($target)) {
-                    $asset->checkOut($target, Auth::user(), date('Y-m-d H:i:s'), '', 'Checked out on asset update', e($request->get('name')), $location);
-                }
+					if (isset($target)) {
+						$asset->checkOut($target, Auth::user(), date('Y-m-d H:i:s'), '', 'Checked out on asset update', e($request->get('name')), $location);
+					}
 
-                if ($asset->image) {
-                    $asset->image = $asset->getImageUrl();
-                }
+					if ($asset->image) {
+						$asset->image = $asset->getImageUrl();
+					}
 
-                return response()->json(Helper::formatStandardApiResponse('success', $asset, trans('admin/hardware/message.update.success')));
-            }
+					//return response()->json(Helper::formatStandardApiResponse('success', $asset, trans('admin/hardware/message.update.success')));
+					$updateResults[$id] = ['status' => 'success', 'payload' => $asset, 'messages' => trans('admin/hardware/message.update.success')];
+					continue;
+				}
 
-            return response()->json(Helper::formatStandardApiResponse('error', null, $asset->getErrors()), 200);
-        }
+				//return response()->json(Helper::formatStandardApiResponse('error', null, $asset->getErrors()), 200);
+				$updateResults[$id] = ['status' => 'error', 'payload' => null, 'messages' => $asset->getErrors()];
+				continue;
+			}
 
-        return response()->json(Helper::formatStandardApiResponse('error', null, trans('admin/hardware/message.does_not_exist')), 200);
+			//return response()->json(Helper::formatStandardApiResponse('error', null, trans('admin/hardware/message.does_not_exist')), 200);
+			$updateResults[$id] = ['status' => 'error', 'payload' => null, 'messages' => trans('admin/hardware/message.does_not_exist')];
+		}
+		//if we only have 1 id (e.g. because we made a request to /{id}), return the data directly for backwards compatibility/to keep expected behaviour
+		if(count($ids) == 1){
+			$updateResult = $updateResults[$ids[0]];
+			return response()->json(Helper::formatStandardApiResponse($updateResult['status'], $updateResult['payload'], $updateResult['messages']));
+		} 
+
+		//otherwise return list of results, keyed by asset_id
+		//hard to decide if something was successful or not since we deal with several assets. A partial success is still a success after all.
+		return response()->json(Helper::formatStandardApiResponse('success', $updateResults, 'Not all updates may have been successful. Check payload for details on each asset.'));
     }
 
 
