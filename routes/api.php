@@ -539,6 +539,20 @@ Route::group(['prefix' => 'v1', 'middleware' => ['api', 'throttle:api']], functi
         ]
         )->name('api.asset.checkout.bulk');
 
+		Route::patch('/bulk',
+        [
+            Api\AssetsController::class, 
+            'update'
+        ]
+        )->name('api.assets.update');
+
+		Route::put('/bulk',
+        [
+            Api\AssetsController::class, 
+            'update'
+        ]
+        )->name('api.assets.update');
+
       Route::post('{asset_id}/restore',
           [
               Api\AssetsController::class,
