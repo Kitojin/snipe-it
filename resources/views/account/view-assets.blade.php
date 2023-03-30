@@ -106,11 +106,11 @@
                     </a>
                   </div>
 
-                <div class="col-md-12" style="padding-top: 5px;">
+                <!-- <div class="col-md-12" style="padding-top: 5px;">
                   <a href="{{ route('account.password.index') }}" style="width: 100%;" class="btn btn-sm btn-primary hidden-print" target="_blank" rel="noopener">
                     {{ trans('general.changepassword') }}
                   </a>
-                </div>
+                </div> -->
 
                 @can('self.api')
                 <div class="col-md-12" style="padding-top: 5px;">
