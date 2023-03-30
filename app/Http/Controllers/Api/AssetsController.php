@@ -807,79 +807,124 @@ class AssetsController extends Controller
      */
     public function checkout(AssetCheckoutRequest $request, $asset_id)
     {
-        $this->authorize('checkout', Asset::class);
-        $asset = Asset::findOrFail($asset_id);
-
-        if (! $asset->availableForCheckout()) {
-            return response()->json(Helper::formatStandardApiResponse('error', ['asset'=> e($asset->asset_tag)], trans('admin/hardware/message.checkout.not_available')));
-        }
-
-        $this->authorize('checkout', $asset);
-
-        $error_payload = [];
-        $error_payload['asset'] = [
-            'id' => $asset->id,
-            'asset_tag' => $asset->asset_tag,
-        ];
-
-
-        // This item is checked out to a location
-        if (request('checkout_to_type') == 'location') {
-            $target = Location::find(request('assigned_location'));
-            $asset->location_id = ($target) ? $target->id : '';
-            $error_payload['target_id'] = $request->input('assigned_location');
-            $error_payload['target_type'] = 'location';
-
-        } elseif (request('checkout_to_type') == 'asset') {
-            $target = Asset::where('id', '!=', $asset_id)->find(request('assigned_asset'));
-            // Override with the asset's location_id if it has one
-            $asset->location_id = (($target) && (isset($target->location_id))) ? $target->location_id : '';
-            $error_payload['target_id'] = $request->input('assigned_asset');
-            $error_payload['target_type'] = 'asset';
-
-        } elseif (request('checkout_to_type') == 'user') {
-            // Fetch the target and set the asset's new location_id
-            $target = User::find(request('assigned_user'));
-            $asset->location_id = (($target) && (isset($target->location_id))) ? $target->location_id : '';
-            $error_payload['target_id'] = $request->input('assigned_user');
-            $error_payload['target_type'] = 'user';
-        }
-
-        if ($request->filled('status_id')) {
-            $asset->status_id = $request->get('status_id');
-        }
-
-
-        if (! isset($target)) {
-            return response()->json(Helper::formatStandardApiResponse('error', $error_payload, 'Checkout target for asset '.e($asset->asset_tag).' is invalid - '.$error_payload['target_type'].' does not exist.'));
-        }
-
-
-
-        $checkout_at = request('checkout_at', date('Y-m-d H:i:s'));
-        $expected_checkin = request('expected_checkin', null);
-        $note = request('note', null);
-        // Using `->has` preserves the asset name if the name parameter was not included in request.
-        $asset_name = request()->has('name') ? request('name') : $asset->name;
-
-        // Set the location ID to the RTD location id if there is one
-        // Wait, why are we doing this? This overrides the stuff we set further up, which makes no sense.
-        // TODO: Follow up here. WTF. Commented out for now. 
-
-
-//        if ((isset($target->rtd_location_id)) && ($asset->rtd_location_id!='')) {
-//            $asset->location_id = $target->rtd_location_id;
-//        }
-
-
-
-        if ($asset->checkOut($target, Auth::user(), $checkout_at, $expected_checkin, $note, $asset_name, $asset->location_id)) {
-            return response()->json(Helper::formatStandardApiResponse('success', ['asset'=> e($asset->asset_tag)], trans('admin/hardware/message.checkout.success')));
-        }
-
-        return response()->json(Helper::formatStandardApiResponse('error', ['asset'=> e($asset->asset_tag)], trans('admin/hardware/message.checkout.error')));
+        //wrap checkout function as a call to bulkcheckout with an array of size 1 in order to not repeat the same code twice
+        return $this->bulkcheckout($request, array($asset_id));
     }
 
+	/**
+	 * bulk checkout assets by their IDs
+	 *
+	 * @author [Kitoyo] 
+	 * @param array<int> $asset_IDs
+	 * @return JsonResponse
+	 **/
+	public function bulkcheckout(AssetCheckoutRequest $request, $asset_IDs = null) {
+		//code taken from checkout function and altered to be able to handle multiple tags
+		$this->authorize('checkout', Asset::class);
+
+		//we might either get an array passed in from checkout() or it's part of the request data 
+		if(! $asset_IDs){
+			$asset_IDs = $request->input('asset_ids');
+		}
+
+		if(!is_array($asset_IDs)){
+			return response()->json(Helper::formatStandardApiResponse('error', ['asset_IDs' => e($asset_IDs)], 'unable to read asset IDs - potentially malformed data'));
+		}
+
+		$assetResults = array();
+		foreach ($asset_IDs as $asset_id) {
+			// ------------- start of code that was originally in checkout() --------------------
+			$asset = Asset::findOrFail($asset_id);
+
+			if (! $asset->availableForCheckout()) {
+				//return response()->json(Helper::formatStandardApiResponse('error', ['asset'=> e($asset->asset_tag)], trans('admin/hardware/message.checkout.not_available')));
+				$assetResults[$asset_id] = ['status' => 'error',  'payload' => ['asset'=> e($asset->asset_tag)], 'messages' => trans('admin/hardware/message.checkout.not_available')];
+				continue;
+			}
+
+			$this->authorize('checkout', $asset);
+
+			$error_payload = [];
+			$error_payload['asset'] = [
+				'id' => $asset->id,
+				'asset_tag' => $asset->asset_tag,
+			];
+
+
+			// This item is checked out to a location
+			if (request('checkout_to_type') == 'location') {
+				$target = Location::find(request('assigned_location'));
+				$asset->location_id = ($target) ? $target->id : '';
+				$error_payload['target_id'] = $request->input('assigned_location');
+				$error_payload['target_type'] = 'location';
+
+			} elseif (request('checkout_to_type') == 'asset') {
+				$target = Asset::where('id', '!=', $asset_id)->find(request('assigned_asset'));
+				$asset->location_id = $target->rtd_location_id;
+				// Override with the asset's location_id if it has one
+				$asset->location_id = (($target) && (isset($target->location_id))) ? $target->location_id : '';
+				$error_payload['target_id'] = $request->input('assigned_asset');
+				$error_payload['target_type'] = 'asset';
+
+			} elseif (request('checkout_to_type') == 'user') {
+				// Fetch the target and set the asset's new location_id
+				$target = User::find(request('assigned_user'));
+				$asset->location_id = (($target) && (isset($target->location_id))) ? $target->location_id : '';
+				$error_payload['target_id'] = $request->input('assigned_user');
+				$error_payload['target_type'] = 'user';
+			}
+
+			if ($request->filled('status_id')) {
+				$asset->status_id = $request->input('status_id');
+			}
+
+
+			if (! isset($target)) {
+				//return response()->json(Helper::formatStandardApiResponse('error', $error_payload, 'Checkout target for asset '.e($asset->asset_tag).' is invalid - '.$error_payload['target_type'].' does not exist.'));
+				$assetResults[$asset_id] = ['status' => 'error',  'payload' => $error_payload, 'messages' => 'Checkout target for asset '.e($asset->asset_tag).' is invalid - '.$error_payload['target_type'].' does not exist.'];
+				continue;
+			}
+
+
+
+			$checkout_at = request('checkout_at', date('Y-m-d H:i:s'));
+			$expected_checkin = request('expected_checkin', null);
+			$note = request('note', null);
+			// Using `->has` preserves the asset name if the name parameter was not included in request.
+			$asset_name = request()->has('name') ? request('name') : $asset->name;
+
+			// Set the location ID to the RTD location id if there is one
+			// Wait, why are we doing this? This overrides the stuff we set further up, which makes no sense.
+			// TODO: Follow up here. WTF. Commented out for now. 
+
+
+			// if ((isset($target->rtd_location_id)) && ($asset->rtd_location_id!='')) {
+			//     $asset->location_id = $target->rtd_location_id;
+			// }
+
+
+
+			if ($asset->checkOut($target, Auth::user(), $checkout_at, $expected_checkin, $note, $asset_name, $asset->location_id)) {
+				//return response()->json(Helper::formatStandardApiResponse('success', ['asset'=> e($asset->asset_tag)], trans('admin/hardware/message.checkout.success')));
+				$assetResults[$asset_id] = ['status' => 'success',  'payload' => ['asset'=> e($asset->asset_tag)], 'messages' => trans('admin/hardware/message.checkout.success')];
+				continue;
+			}
+
+			//return response()->json(Helper::formatStandardApiResponse('error', ['asset'=> e($asset->asset_tag)], trans('admin/hardware/message.checkout.error')));
+			$assetResults[$asset_id] = ['status' => 'error',  'payload' => ['asset'=> e($asset->asset_tag)], 'messages' => trans('admin/hardware/message.checkout.error')];
+		}
+		// ------------- end of code that was originally in checkout() --------------------
+
+		//if we only have 1 id (e.g. because we made a call to /{id}/checkout), return the data directly for backwards compatibility/to keep expected behaviour
+		if(count($asset_IDs) == 1){
+			$assetResult = $assetResults[$asset_IDs[0]];
+			return response()->json(Helper::formatStandardApiResponse($assetResult['status'], $assetResult['payload'], $assetResult['messages']));
+		} 
+
+		//otherwise return list of results, keyed by asset_id
+		//hard to decide if something was successful or not since we deal with several assets. A partial success is still a success after all.
+		return response()->json(Helper::formatStandardApiResponse('success', $assetResults, 'Not all checkouts may have been successful. Check payload for details on each asset.'));
+	}
 
     /**
      * Checkin an asset
