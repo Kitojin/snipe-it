@@ -21,6 +21,10 @@
     <div class="col-md-7 col-md-offset-3">
         <p class="help-block">{!! trans('admin/categories/message.update.cannot_change_category_type') !!} </p>
     </div>
+	<label for="category_prefix" class="col-md-3 control-label">{{ trans('admin/categories/general.prefix')}}</label>
+	<div class="col-md-7">
+		{{ Form::text('category_prefix', old('category_prefix', $item->category_prefix), array('class' => 'form-control', 'aria-label'=>'category_prefix')) }}
+	</div>
 </div>
 
 
