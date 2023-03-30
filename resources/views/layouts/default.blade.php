@@ -339,12 +339,12 @@
                               {{ trans('general.editprofile') }}
                          </a>
                      </li>
-                     <li>
+                     <!-- <li>
                          <a href="{{ route('account.password.index') }}">
                              <i class="fa-solid fa-asterisk fa-fw" aria-hidden="true"></i>
                              {{ trans('general.changepassword') }}
                          </a>
-                     </li>
+                     </li> -->
 
 
 
