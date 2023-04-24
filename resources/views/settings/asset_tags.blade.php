@@ -43,7 +43,7 @@
                         <!-- auto ids -->
                         <div class="form-group">
                             <div class="col-md-5">
-                                {{ Form::label('auto_increment_assets', trans('admin/settings/general.auto_increment_assets')) }}
+                                <strong>{{  trans('admin/settings/general.auto_increment_assets') }}</strong>
                             </div>
                             <div class="col-md-7">  
 								{{ Form::radio('auto_increment_assets', '0', old('auto_increment_assets', $setting->auto_increment_assets==0),array('class' => 'minimal', 'aria-label'=>'auto_increment_assets')) }}
