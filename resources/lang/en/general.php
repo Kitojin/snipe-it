@@ -422,6 +422,8 @@ return [
     'merged_log_this_user_from' => 'Merged user ID :from_id (:from_username) into this user (ID :to_id - :to_username)',
     'clear_and_save'            => 'Clear & Save',
     'update_existing_values'    => 'Update Existing Values?',
+    'auto_incrementing_asset_tags_disabled_so_tags_required' => 'Generating auto-incrementing asset tags is disabled so all rows need to have the "Asset Tag" column populated.',
+    'auto_incrementing_asset_tags_enabled_so_now_assets_will_be_created' => 'Note: Generating auto-incrementing asset tags is enabled so assets will be created for rows that do not have "Asset Tag" populated. Rows that do have "Asset Tag" populated will be updated with the provided information.',
     'send_welcome_email_to_users'   => ' Send Welcome Email for new Users?',
     'back_before_importing'     => 'Backup before importing?',
     'csv_header_field'          => 'CSV Header Field',
@@ -436,4 +438,14 @@ return [
     'setup_successful_migrations' => 'Your database tables have been created',
     'setup_migration_output' => 'Migration output:',
     'setup_migration_create_user' => 'Next: Create User',
+    'importer_generic_error'    => 'Your file import is complete, but we did receive an error. This is usually caused by third-party API throttling from a notification webhook (such as Slack) and would not have interfered with the import itself, but you should confirm this.',
+    'confirm' => 'Confirm',
+    'autoassign_licenses' => 'Auto-Assign Licenses',
+    'autoassign_licenses_help' => 'Allow user to be have licenses assigned via the bulk-assign license UI or cli tools.',
+    'autoassign_licenses_help_long' => 'This allows a user to be have licenses assigned via the bulk-assign license UI or cli tools. (For example, you might not want contractors to be auto-assigned a license you would provide to only staff members. You can still individually assign licenses to those users, but they will not be included in the Checkout License to All Users functions.)',
+    'no_autoassign_licenses_help' => 'Do not include user for bulk-assigning through the license UI or cli tools.',
+    'modal_confirm_generic'      => 'Are you sure?',
+    'cannot_be_deleted'      => 'This item cannot be deleted',
+    'undeployable_tooltip'      => 'This item cannot be checked out. Check the quantity remaining.',
+
 ];
