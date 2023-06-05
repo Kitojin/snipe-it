@@ -18,9 +18,37 @@ class Settings
         return new self();
     }
 
+    public function enableAlertEmail(string $email = 'notifications@afcrichmond.com'): Settings
+    {
+        return $this->update(['alert_email' => $email]);
+    }
+
+    public function disableAlertEmail(): Settings
+    {
+        return $this->update(['alert_email' => null]);
+    }
+
     public function enableMultipleFullCompanySupport(): Settings
     {
         return $this->update(['full_multiple_companies_support' => 1]);
+    }
+
+    public function enableWebhook(): Settings
+    {
+        return $this->update([
+            'webhook_botname' => 'SnipeBot5000',
+            'webhook_endpoint' => 'https://hooks.slack.com/services/NZ59/Q446/672N',
+            'webhook_channel' => '#it',
+        ]);
+    }
+
+    public function disableWebhook(): Settings
+    {
+        return $this->update([
+            'webhook_botname' => '',
+            'webhook_endpoint' => '',
+            'webhook_channel' => '',
+        ]);
     }
 
     /**

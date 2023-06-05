@@ -897,6 +897,13 @@ Route::group(['prefix' => 'v1', 'middleware' => ['api', 'throttle:api']], functi
                 ]
             )->name('api.statuslabels.deployable');
 
+            Route::get('selectlist',
+                [
+                    Api\StatuslabelsController::class,
+                    'selectlist'
+                ]
+            )->name('api.statuslabels.selectlist');
+
         }); 
     
         Route::resource('statuslabels', 
