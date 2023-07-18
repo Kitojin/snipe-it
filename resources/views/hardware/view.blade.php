@@ -342,8 +342,9 @@
                                                     @if (($asset->model) && ($asset->model->manufacturer->url))
                                                         <li>
                                                             <i class="fas fa-globe-americas" aria-hidden="true"></i>
-                                                            <a href="{{ $asset->model->manufacturer->url }}">
+                                                            <a href="{{ $asset->model->manufacturer->url }}" target="_blank">
                                                                 {{ $asset->model->manufacturer->url }}
+                                                                <i class="fa fa-external-link" aria-hidden="true"></i>
                                                             </a>
                                                         </li>
                                                     @endif
@@ -351,8 +352,19 @@
                                                     @if (($asset->model) && ($asset->model->manufacturer->support_url))
                                                         <li>
                                                             <i class="far fa-life-ring" aria-hidden="true"></i>
-                                                            <a href="{{ $asset->model->manufacturer->support_url }}">
+                                                            <a href="{{ $asset->model->manufacturer->support_url }}" target="_blank">
                                                                 {{ $asset->model->manufacturer->support_url }}
+                                                                <i class="fa fa-external-link" aria-hidden="true"></i>
+                                                            </a>
+                                                        </li>
+                                                    @endif
+
+                                                    @if (($asset->model->manufacturer) && ($asset->model->manufacturer->warranty_lookup_url!=''))
+                                                        <li>
+                                                            <i class="far fa-wrench" aria-hidden="true"></i>
+                                                            <a href="{{ $asset->present()->dynamicWarrantyUrl() }}" target="_blank">
+                                                                {{ $asset->present()->dynamicWarrantyUrl() }}
+                                                                <i class="fa fa-external-link" aria-hidden="true"><span class="sr-only">{{ trans('admin/hardware/general.mfg_warranty_lookup', ['manufacturer' => $asset->model->manufacturer->name]) }}</span></i>
                                                             </a>
                                                         </li>
                                                     @endif
@@ -730,7 +742,7 @@
                                             </strong>
                                         </div>
                                         <div class="col-md-6">
-                                               {!! nl2br(e($asset->notes)) !!}
+                                            {!! nl2br(Helper::parseEscapedMarkedownInline($asset->notes)) !!}
                                         </div>
                                     </div>
 
@@ -919,6 +931,10 @@
                                                 </li>
                                             @endif
 
+                                            @if((isset($asset->assignedTo)) && ($asset->assignedTo->department))
+                                                <li>{{ trans('admin/hardware/general.user_department') }}: {{ $asset->assignedTo->department->name}}</li>
+                                            @endif
+
                                             @if (isset($asset->location))
                                                 <li>{{ $asset->location->name }}</li>
                                                 <li>{{ $asset->location->address }}
@@ -932,6 +948,14 @@
                                                         ,
                                                     @endif
                                                     {{ $asset->location->state }} {{ $asset->location->zip }}
+                                                </li>
+                                            @endif
+                                                <li>
+                                                    <i class="fas fa-calendar"></i> {{ trans('admin/hardware/form.checkout_date') }}: {{ Helper::getFormattedDateObject($asset->last_checkout, 'date', false) }}
+                                                </li>
+                                            @if (isset($asset->expected_checkin))
+                                                <li>
+                                                    <i class="fas fa-calendar"></i> {{ trans('admin/hardware/form.expected_checkin') }}: {{ Helper::getFormattedDateObject($asset->expected_checkin, 'date', false) }}
                                                 </li>
                                             @endif
                                         </ul>
