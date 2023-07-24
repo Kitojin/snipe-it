@@ -144,7 +144,7 @@ class CheckoutableListener
         /**
          * Notify the user who checked out the item
          */
-        $notifiables->push($event->checkedOutTo);
+        //$notifiables->push($event->checkedOutTo);
 
         /**
          * Notify Admin users if the settings is activated
